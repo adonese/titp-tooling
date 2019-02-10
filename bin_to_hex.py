@@ -14,5 +14,7 @@ def clean_number(num):
 
 if __name__ == "__main__":
     print(bin_to_hex("0000010010001101"))
+    hexify = hex_to_bytes(clean_number("70 38 04 80 20 c0 90 04"))
+    print(len(hexify), hexify)
 #TODO
 # Define a test for this function

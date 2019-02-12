@@ -1,12 +1,14 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
+	"encoding/hex"
 	"fmt"
 	"github.com/ideazxy/iso8583"
 	"io"
 	"net"
 	"os"
+	"reflect"
 	"time"
 )
 
@@ -19,12 +21,14 @@ type ISOSignIn struct {
 }
 
 func main() {
-	//testIso()
-	//data := []byte("002260001900000800203800000080000099000000000414150008023232323233333333")
-	//tcpClientNew(data)
-	d := testIso()
-	fmt.Printf("% x\n", d)
-	tcpClientNew(d)
+	//
+	//d := testIso()
+	//fmt.Printf("% x\n", d)
+	b, err := hex.DecodeString("002260001900000800203800000080000099000000000414150008023232323233333333")
+	if err != nil{
+		os.Exit(1)
+	}
+	tcpClientNew(b)
 }
 
 func testIso() []byte{
@@ -41,6 +45,7 @@ func testIso() []byte{
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
 	return b
 }
 
@@ -66,25 +71,44 @@ func tcpClientNew(b []byte) {
 
 	conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 
-	//bufReader := bufio.NewReader(conn)
-	//recvBuf := make([]byte, 1024)
-	//n, err := bufReader.Read(recvBuf)
-	//for err == nil {
-	//	println("Recv data from server:", string(recvBuf[:n]))
-	//	n, err = bufReader.Read(recvBuf)
-	//}
-	//if err != io.EOF {
-	//	println("recv from server failed, err:", err.Error())
-	//	fmt.Println(reflect.TypeOf(err))
-	//
-	//}else{
-	//	fmt.Printf("Unexpected error: %s\n", err.Error())
-	//	fmt.Println(reflect.TypeOf(err))
-	//}
-	var buf bytes.Buffer
+	bufReader := bufio.NewReader(conn)
+	recvBuf := make([]byte, 2048)
+	n, err := bufReader.Read(recvBuf)
+	for err == nil {
+		println("Recv data from server:", string(recvBuf[:n]))
+		n, err = bufReader.Read(recvBuf)
+	}
+	if err != io.EOF {
+		println("recv from server failed, err:", err.Error())
+		fmt.Println(reflect.TypeOf(err))
 
-	io.Copy(&buf, conn)
-	fmt.Println("Total length: \n", buf.Len())
-	fmt.Printf("Received buffer is: %x", buf.Bytes())
+	}else{
+		fmt.Printf("Unexpected error: %s\n", err.Error())
+		fmt.Println(reflect.TypeOf(err))
+	}
+
+	////var buf bytes.Buffer
+	////
+	////io.Copy(&buf, conn)
+	////fmt.Println("Total length: \n", buf.Len())
+	////fmt.Printf("Received buffer is: %x", buf.Bytes())
+	//buf := make([]byte, 2048)
+	//n, err := io.ReadFull(conn, buf)
+	//if err != nil{
+	//	fmt.Printf("Error reading tcp stream %s\n", err.Error())
+	//}
+	//fmt.Printf("Number of bytes are %d", n)
+
 
 }
+
+
+func getLength (b []byte) int{
+	return len(b)
+}
+
+func formatToHex(n int) string{
+	numberBytes := string(n)
+	return fmt.Sprintf("%04s", hex.EncodeToString([]byte(numberBytes)))
+}
+
